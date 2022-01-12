@@ -26,8 +26,6 @@ package org.pi4.locutil;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-import org.pi4.locutil.Configuration;
-
 /**
  * This class is a rapper class for the JDK Random class. The idea is to provide a loceva specific
  * Random class that is configured during loceva startup. This class should be used instead of the
