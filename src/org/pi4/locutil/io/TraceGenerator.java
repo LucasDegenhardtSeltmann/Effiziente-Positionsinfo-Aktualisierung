@@ -26,6 +26,7 @@ public class TraceGenerator {
 	private ArrayList<TraceEntry> onlineTraceEntries;
 	private ArrayList<TraceEntry> offlineSet;
 	private ArrayList<TraceEntry> onlineSet;
+	private ArrayList<TraceEntry> modelSet;
 	private ArrayList<MACAddress> minimumMacSet;
 	private ArrayList<Integer> onlineSetBuckets;
 	private ArrayList<GeoPosition> trackingPos;
@@ -58,6 +59,20 @@ public class TraceGenerator {
 		onlineTraceEntries = new ArrayList<TraceEntry>(onlineParser.parse());
 		
 		if (verbose) System.out.println("TraceGenerator was fed with " + offlineTraceEntries.size() + " TraceEntries for the offline set and " + onlineTraceEntries.size() + " TraceEntries for the online set.");
+	}
+
+	public TraceGenerator(Parser offlineParser, Parser onlineParser, int offlineSize, int onlineSize, ArrayList<String[]> aps) throws IOException, NumberFormatException {
+		// set the properties
+		this.offlineSize = offlineSize; 
+		this.onlineSize = onlineSize;
+		onlineRatio = 100.0;
+		discardOrientationInFingerprints = true;
+		traceType = "Rice";
+		onlineParser.setPrecision(5.0);
+		offlineParser.setPrecision(45.0);
+		offlineTraceEntries = new ArrayList<TraceEntry>(offlineParser.parse());
+		onlineTraceEntries = new ArrayList<TraceEntry>(onlineParser.parse());
+		generateModel(aps);
 	}
 	
 	public int getOnlineSetSize() {
@@ -170,6 +185,10 @@ public class TraceGenerator {
 	public ArrayList<TraceEntry> getOffline() {
 		return new ArrayList<TraceEntry>(offlineSet);
 	}
+
+	public ArrayList<TraceEntry> getOfflineModel() {
+		return new ArrayList<TraceEntry>(modelSet);
+	}
 	
 	public ArrayList<TraceEntry> getOnline() {
 		return new ArrayList<TraceEntry>(onlineSet);
@@ -177,6 +196,28 @@ public class TraceGenerator {
 	
 	// Methods for writing the generated sets to files.
 	public void writeOffline(File outfile) throws IOException {
+		PrintStream out = new PrintStream(outfile);
+		
+		// Iterate through the offline set.
+		for (int i = 0; i < offlineSet.size(); i++) {
+			TraceEntry te = offlineSet.get(i);
+			String line = "t=" + te.getTimestamp() + ";id=" + te.getId() + ";pos=";
+			GeoPosition gp = te.getGeoPosition();
+			line += gp.getX() + "," + gp.getY() + "," + gp.getZ() + ";degree=" + te.getGeoPosition().getOrientation();
+			SignalStrengthSamples samples = te.getSignalStrengthSamples();
+			Iterator<MACAddress> sampleIterator = samples.keySet().iterator();
+			while (sampleIterator.hasNext()) {
+				MACAddress macAddress = sampleIterator.next();
+				line += ";" + macAddress.toString() + "=" + samples.getFirstSignalStrength(macAddress) + "," + samples.getChannel(macAddress);
+			}
+			out.println(line);
+			out.flush();
+		}
+		// Close the output file.
+		out.close();
+	}
+
+	public void writeOfflineModel(File outfile) throws IOException {
 		PrintStream out = new PrintStream(outfile);
 		
 		// Iterate through the offline set.
@@ -450,7 +491,7 @@ public class TraceGenerator {
 		}
 	}
 	
-	private void generateSets() {	
+	private void generateSets() {
 		// Generate the online set.
 		chooseOnlineSetBuckets();
 		if (verbose) System.out.println("TraceGenerator: Generating the online set ...");
@@ -496,5 +537,31 @@ public class TraceGenerator {
 				traceEntryBucket.remove(j);
 			}
 		}
+	}
+
+	private void generateModel(ArrayList<String[]> aps) {
+		// Generate the offline set.
+		if (verbose) System.out.println("TraceGenerator: Generating the offlineModel set ...");
+		modelSet = new ArrayList<TraceEntry>();
+
+		for(double i = 0; i<60; i++){
+			for(double j = 0; j<60; j++){
+				SignalStrengthSamples sigStrength = new SignalStrengthSamples();
+				GeoPosition akt = new GeoPosition(i,j);
+				for(String[]  ap: aps){
+					double dist = akt.distance(new GeoPosition(Double.parseDouble(ap[1]),Double.parseDouble(ap[2])));
+					double strength = getModelSignalStrength(dist,0);
+					sigStrength.put(MACAddress.parse(ap[0]),strength);
+				}
+				modelSet.add(new TraceEntry(0L,akt,null,sigStrength));
+			}
+		}
+	}
+
+	private double getModelSignalStrength(double d, int c){
+		int d0=1;
+		double n = 3.415;
+		double pd0 = -33.77;
+		return pd0-10*n*Math.log10(d/d0) - c;
 	}
 }
