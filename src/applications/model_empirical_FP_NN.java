@@ -97,18 +97,19 @@ public class model_empirical_FP_NN {
 				}
 				
 				//Print out coordinates for the collection point and the number of signal strength samples
-			//	System.out.println(entry.getGeoPosition().toString() + " - " + entry.getSignalStrengthSamples().size());				
+			//	System.out.println(entry.getGeoPosition().toString() + " - " + entry.getSignalStrengthSamples().size());		
+			System.out.println(String.valueOf(entry.getSignalStrengthSamples()).split(";")[1].split(",")[0].split("=")[1]);	
 			}
 			List<TraceEntry> modelTrace = tg.getOfflineModel();
 			TraceEntry singleTrace = modelTrace.get(1);
-			//System.out.println("Abstand zu Ap1: "+tg.getOfflineModel().get(1).getSignalStrengthSamples().size());
+			System.out.println("No. of Aps: "+modelTrace.get(1).getSignalStrengthSamples().size());
 
 
 			//System.out.println("nearN"+ nearN);
 			//System.out.println("aff: "+aff);
 			
 			PositioningError testFehler = new PositioningError(nearN, randomOnlineTrace.getGeoPosition());
-			//System.out.println("Testfehler: "+ testFehler);
+			System.out.println("Testfehler: "+ testFehler);
 			//Iterate the trace generated from the online file
 			
 			for(TraceEntry entry: onlineTrace) {

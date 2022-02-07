@@ -544,14 +544,16 @@ public class TraceGenerator {
 		if (verbose) System.out.println("TraceGenerator: Generating the offlineModel set ...");
 		modelSet = new ArrayList<TraceEntry>();
 
-		for(double i = 0; i<60; i++){
-			for(double j = 0; j<60; j++){
+		for(double i = 0; i<60; i += 0.5){
+			for(double j = 0; j<60; j += 0.5){
 				SignalStrengthSamples sigStrength = new SignalStrengthSamples();
 				GeoPosition akt = new GeoPosition(i,j);
 				for(String[]  ap: aps){
 					double dist = akt.distance(new GeoPosition(Double.parseDouble(ap[1]),Double.parseDouble(ap[2])));
-					double strength = getModelSignalStrength(dist,0);
-					sigStrength.put(MACAddress.parse(ap[0]),strength);
+					double strength = getModelSignalStrength(dist,1);
+					if(strength > -80){
+						sigStrength.put(MACAddress.parse(ap[0]),strength);
+					}
 				}
 				modelSet.add(new TraceEntry(0L,akt,null,sigStrength));
 			}
