@@ -77,8 +77,7 @@ public class empirical_FP_NN {
 			
 			HashMap<GeoPosition, Double> estimatedPosition = new HashMap<GeoPosition, Double>();
 			for(TraceEntry entry: offlineTrace) {
-				
-			
+							
 				double dist = 0;
 				for(int i=0; i<apMac.length; i++) {
 					
@@ -87,27 +86,27 @@ public class empirical_FP_NN {
 						double offlineTraceSS = entry.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
 						
 					//Wenn Offline-Fingerprint Signalmessung von MACAdresse besitzt und Online-Fingerprint Signalmessung von MACAdresse besitzt
-						
 						if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apMac[i]))) {
 							double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
 				
-								dist = dist+((onlineTraceSS-offlineTraceSS)*(onlineTraceSS-offlineTraceSS));
+								dist = dist+((onlineTraceSS-(offlineTraceSS))*(onlineTraceSS-(offlineTraceSS)));
 						}
 						
 					//Wenn Offline-Fingerprint Signalmessung von MACAdresse besitzt	aber Online-Fingerprint keine Signalmessung zu MACAdresse besitzt
-						
 						else
 						{
-							dist = dist+((0.0-offlineTraceSS)*(0.0-offlineTraceSS));
+				//			dist = dist+((-90.0-(offlineTraceSS))*(-90.0-(offlineTraceSS)));
 						}
 					}
 					
 					//Wenn Offline-Fingerprint keine Signalmessung von MACAdresse besitzt, aber Online-Fingerprint Signalmessung von MACAdresse hat
-					
 					else if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apMac[i]))) {
 						double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
-						dist = dist+((onlineTraceSS-0.0)*(onlineTraceSS-0.0));
+						
+						dist = dist+((onlineTraceSS-(-90.0))*(onlineTraceSS-(-90.0)));
 					}
+					
+					
 				}
 				//System.out.println(entry.getGeoPosition());
 				dist = Math.sqrt(dist);
@@ -182,7 +181,20 @@ public class empirical_FP_NN {
 	    }
 	}
 	
-	public static void nearestNeighbour(TraceEntry oP, HashMap<GeoPosition, Double> eP) {
+	public static void nearestNeighbour(TraceEntry realPosition, HashMap<GeoPosition, Double> estimatedPositionsMap) {
+		double eukDistance = 50.0;
+		
+		
+		GeoPosition estimatedPosition = new GeoPosition(0.0,0.0,0.0);
+		
+		for(HashMap.Entry<GeoPosition, Double> entry : estimatedPositionsMap.entrySet()) {
+			if(entry.getValue() < eukDistance) {
+				
+				eukDistance = entry.getValue();
+				estimatedPosition = entry.getKey();
+			}
+		}
+		System.out.println("NearestNeighbour: "+estimatedPosition+" "+eukDistance);
 		
 	}
 
