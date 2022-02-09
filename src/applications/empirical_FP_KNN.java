@@ -162,7 +162,7 @@ public class empirical_FP_KNN {
 	public static void write(GeoPosition realPosition, GeoPosition estimatedPosition)
 	{
 		try {
-			File file = new File("empirical_FP_N.txt");
+			File file = new File("empirical_FP_KNN.txt");
 			if(!file.exists()) {
 				file.createNewFile();
 			}
@@ -190,7 +190,7 @@ public class empirical_FP_KNN {
 	
 	public static void nearestNeighbour(TraceEntry realPosition, HashMap<GeoPosition, Double> estimatedPositionsMap, int k) {
 	
-		GeoPosition estimatedPosition = new GeoPosition(0.0,0.0,0.0);
+		
 		HashMap<GeoPosition, Double> kNN = new LinkedHashMap<GeoPosition, Double>();
 		
 		GeoPosition [] aEstimatedPositionsMap = new GeoPosition[estimatedPositionsMap.size()];
@@ -213,26 +213,41 @@ public class empirical_FP_KNN {
 			System.out.println(aEukDist[i]);
 		}*/
 		
+		double x=0;
+		double y=0;
+		double z=0;
+		
 		System.out.println(aEukDist[0]);
 		System.out.println(aEukDist[1]);
 		System.out.println(aEukDist[2]);
 		
-			for(HashMap.Entry<GeoPosition, Double> entry : estimatedPositionsMap.entrySet()) {
-				for(int i=0; i<k; i++) {
-					if(entry.getValue() == aEukDist[i]) {
-						kNN.put(entry.getKey(),entry.getValue());
-					}
+		for(HashMap.Entry<GeoPosition, Double> entry : estimatedPositionsMap.entrySet()) {
+			for(int i=0; i<k; i++) {
+				if(entry.getValue() == aEukDist[i]) {
+					kNN.put(entry.getKey(),entry.getValue());
+					x=x+entry.getKey().getX();
+					System.out.println(x);
+					y=y+entry.getKey().getY();
+					System.out.println(y);
+					z=z+entry.getKey().getZ();
+					System.out.println(z);
 				}
 			}
+		}
+		
+		GeoPosition estimatedPosition = new GeoPosition((x)/k , (y)/k , (z)/k);
+		
+		System.out.println(estimatedPosition);
 			
 								
 						
 				
 		for(HashMap.Entry<GeoPosition, Double> e : kNN.entrySet()) {
+			
 			System.out.println("NearestNeighbour: "+e.getKey()+" "+e.getValue());
 		}
 		
-		
+		write(realPosition.getGeoPosition(), estimatedPosition);
 		
 	}
 

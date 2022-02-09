@@ -195,6 +195,7 @@ public class empirical_FP_NN {
 			}
 		}
 		System.out.println("NearestNeighbour: "+estimatedPosition+" "+eukDistance);
+		write(realPosition.getGeoPosition(), estimatedPosition);
 		
 	}
 
