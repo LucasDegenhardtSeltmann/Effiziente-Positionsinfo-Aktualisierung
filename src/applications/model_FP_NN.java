@@ -4,14 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.swing.JOptionPane;
-
+import java.util.Scanner;
 import java.lang.Math;
 
 
@@ -27,7 +24,7 @@ import org.pi4.locutil.*;
  * @author mikkelbk
  */
 
-public class empirical_FP_KNN {
+public class model_FP_NN {
 
 	/**
 	 * Execute example
@@ -35,20 +32,9 @@ public class empirical_FP_KNN {
 	 */
 	public static void main(String[] args) {
 		
-		String offlinePath = "data/MU.1.5meters.offline.trace", onlinePath = "data/MU.1.5meters.online.trace";
+		String offlinePath = "data/MU.1.5meters.offline.trace", onlinePath = "data/MU.1.5meters.online.trace", apPath = "data/MU.AP.positions";
 		TraceEntry randomOnlineTrace = null;
-		String [] apMac = { "00:14:BF:B1:7C:54",
-							"00:16:B6:B7:5D:8F",
-							"00:14:BF:B1:7C:57",
-							"00:14:BF:B1:97:8D",
-							"00:16:B6:B7:5D:9B",
-							"00:14:6C:62:CA:A4",
-							"00:14:BF:3B:C7:C6",
-							"00:14:BF:B1:97:8A",
-							"00:14:BF:B1:97:81",
-							"00:16:B6:B7:5D:8C",
-							"00:11:88:28:5E:E0" };
-		
+
 		//Construct parsers
 		File offlineFile = new File(offlinePath);
 		Parser offlineParser = new Parser(offlineFile);
@@ -58,9 +44,19 @@ public class empirical_FP_KNN {
 		Parser onlineParser = new Parser(onlineFile);
 		System.out.println("Online File: " + onlineFile.getAbsoluteFile());
 		
-		int k = Integer.parseInt(JOptionPane.showInputDialog("Zahl f�r k eingeben: "));
-		
-		
+		ArrayList<String[]> apEntries= new ArrayList<String[]>();
+		File apFile = new File(apPath);
+		Scanner apParser;
+		try {
+			apParser = new Scanner(apFile);
+			apParser.nextLine();
+		while(apParser.hasNext()) {
+			apEntries.add(apParser.nextLine().split(" "));
+		}
+		apParser.close();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
 		//Construct trace generator
 		TraceGenerator tg;
 		
@@ -69,13 +65,13 @@ public class empirical_FP_KNN {
 			int offlineSize = 110;
 			int onlineSize = 110;
 			
-			tg = new TraceGenerator(offlineParser, onlineParser,offlineSize,onlineSize);
+			tg = new TraceGenerator(offlineParser, onlineParser,offlineSize,onlineSize,apEntries);
 			
 			//Generate traces from parsed files
 			tg.generate();
 			
 			//Iterate the trace generated from the offline file
-			List<TraceEntry> offlineTrace = tg.getOffline();	
+			List<TraceEntry> offlineTrace = tg.getOfflineModel();	
 			List<TraceEntry> onlineTrace = tg.getOnline();	
 	
 			randomOnlineTrace = onlineTrace.get((int) (Math.random() * onlineTrace.size()) + 1 );
@@ -86,15 +82,15 @@ public class empirical_FP_KNN {
 			for(TraceEntry entry: offlineTrace) {
 							
 				double dist = 0;
-				for(int i=0; i<apMac.length; i++) {
+				for(int i=0; i<apEntries.size(); i++) {
 					
 					//Wenn Offline-Fingerprint Signalmessung von MACAdresse besitzt
-					if(entry.getSignalStrengthSamples().containsKey(MACAddress.parse(apMac[i]))) {
-						double offlineTraceSS = entry.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
+					if(entry.getSignalStrengthSamples().containsKey(MACAddress.parse(apEntries.get(i)[0]))) {
+						double offlineTraceSS = entry.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apEntries.get(i)[0]));
 						
 					//Wenn Offline-Fingerprint Signalmessung von MACAdresse besitzt und Online-Fingerprint Signalmessung von MACAdresse besitzt
-						if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apMac[i]))) {
-							double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
+						if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apEntries.get(i)[0]))) {
+							double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apEntries.get(i)[0]));
 				
 								dist = dist+((onlineTraceSS-(offlineTraceSS))*(onlineTraceSS-(offlineTraceSS)));
 						}
@@ -107,8 +103,8 @@ public class empirical_FP_KNN {
 					}
 					
 					//Wenn Offline-Fingerprint keine Signalmessung von MACAdresse besitzt, aber Online-Fingerprint Signalmessung von MACAdresse hat
-					else if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apMac[i]))) {
-						double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apMac[i]));
+					else if(randomOnlineTrace.getSignalStrengthSamples().containsKey(MACAddress.parse(apEntries.get(i)[0]))) {
+						double onlineTraceSS = randomOnlineTrace.getSignalStrengthSamples().getAverageSignalStrength(MACAddress.parse(apEntries.get(i)[0]));
 						
 						dist = dist+((onlineTraceSS-(-90.0))*(onlineTraceSS-(-90.0)));
 					}
@@ -129,11 +125,11 @@ public class empirical_FP_KNN {
 			
 			}
 			
-		//	estimatedPosition.entrySet().forEach(entry -> {
-		//	    System.out.println(entry.getKey() + " " + entry.getValue());
-		//	});
+			estimatedPosition.entrySet().forEach(entry -> {
+			    System.out.println(entry.getKey() + " " + entry.getValue());
+			});
 			
-			nearestNeighbour(randomOnlineTrace, estimatedPosition, k);
+			nearestNeighbour(randomOnlineTrace, estimatedPosition);
 				
 
 			//write(randomOnlineTrace.getGeoPosition(), nearestNeighbour);
@@ -162,7 +158,7 @@ public class empirical_FP_KNN {
 	public static void write(GeoPosition realPosition, GeoPosition estimatedPosition)
 	{
 		try {
-			File file = new File("data/output/empirical_FP_KNN.txt");
+			File file = new File("data/output/model_FP_NN.txt");
 			if(!file.exists()) {
 				file.createNewFile();
 			}
@@ -188,65 +184,20 @@ public class empirical_FP_KNN {
 	    }
 	}
 	
-	public static void nearestNeighbour(TraceEntry realPosition, HashMap<GeoPosition, Double> estimatedPositionsMap, int k) {
-	
+	public static void nearestNeighbour(TraceEntry realPosition, HashMap<GeoPosition, Double> estimatedPositionsMap) {
+		double eukDistance = 50.0;
 		
-		HashMap<GeoPosition, Double> kNN = new LinkedHashMap<GeoPosition, Double>();
 		
-		GeoPosition [] aEstimatedPositionsMap = new GeoPosition[estimatedPositionsMap.size()];
-		double[] aEukDist = new double[estimatedPositionsMap.size()];
-		
-		int index = 0;
-		for (HashMap.Entry<GeoPosition, Double> entry : estimatedPositionsMap.entrySet()) {
-			aEstimatedPositionsMap[index] = entry.getKey();
-			aEukDist[index] = entry.getValue();
-		    index++;
-		}
-		/*for(int i=0;i<aEukDist.length;i++) {
-			System.out.println(aEukDist[i]);
-		}*/
-		
-		Arrays.sort(aEukDist);
-		System.out.println();
-		
-	/*	for(int i=0;i<aEukDist.length;i++) {
-			System.out.println(aEukDist[i]);
-		}*/
-		
-		double x=0;
-		double y=0;
-		double z=0;
-		
-		System.out.println(aEukDist[0]);
-		System.out.println(aEukDist[1]);
-		System.out.println(aEukDist[2]);
+		GeoPosition estimatedPosition = new GeoPosition(0.0,0.0,0.0);
 		
 		for(HashMap.Entry<GeoPosition, Double> entry : estimatedPositionsMap.entrySet()) {
-			for(int i=0; i<k; i++) {
-				if(entry.getValue() == aEukDist[i]) {
-					kNN.put(entry.getKey(),entry.getValue());
-					x=x+entry.getKey().getX();
-					System.out.println(x);
-					y=y+entry.getKey().getY();
-					System.out.println(y);
-					z=z+entry.getKey().getZ();
-					System.out.println(z);
-				}
+			if(entry.getValue() < eukDistance) {
+				
+				eukDistance = entry.getValue();
+				estimatedPosition = entry.getKey();
 			}
 		}
-		
-		GeoPosition estimatedPosition = new GeoPosition((x)/k , (y)/k , (z)/k);
-		
-		System.out.println(estimatedPosition);
-			
-								
-						
-				
-		for(HashMap.Entry<GeoPosition, Double> e : kNN.entrySet()) {
-			
-			System.out.println("NearestNeighbour: "+e.getKey()+" "+e.getValue());
-		}
-		
+		System.out.println("NearestNeighbour: "+estimatedPosition+" "+eukDistance);
 		write(realPosition.getGeoPosition(), estimatedPosition);
 		
 	}

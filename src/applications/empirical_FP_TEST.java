@@ -103,7 +103,7 @@ public class empirical_FP_TEST {
 	public static void write(GeoPosition realPosition, GeoPosition estimatedPosition)
 	{
 		try {
-			File file = new File("empirical_FP_N.txt");
+			File file = new File("data/output/empirical_FP_N.txt");
 			if(!file.exists()) {
 				file.createNewFile();
 			}

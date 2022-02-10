@@ -547,11 +547,11 @@ public class TraceGenerator {
 		for(double i = 0; i<60; i += 0.5){
 			for(double j = 0; j<60; j += 0.5){
 				SignalStrengthSamples sigStrength = new SignalStrengthSamples();
-				GeoPosition akt = new GeoPosition(i,j);
+				GeoPosition akt = new GeoPosition(i-30,j-30);
 				for(String[]  ap: aps){
 					double dist = akt.distance(new GeoPosition(Double.parseDouble(ap[1]),Double.parseDouble(ap[2])));
 					double strength = getModelSignalStrength(dist,1);
-					if(strength > -80){
+					if(strength > -90){
 						sigStrength.put(MACAddress.parse(ap[0]),strength);
 					}
 				}

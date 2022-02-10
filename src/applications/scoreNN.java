@@ -2,17 +2,16 @@ package applications;
 
 import java.io.*; 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Scanner;
 
 import org.pi4.locutil.GeoPosition;
 
 public class scoreNN {
     public static void main(String args[]){
-        String inputPath = "data/empirical_FP_N.txt";
-        String outputPath = "data/MU.scoreNN";
+        String inputPath = "data/output/model_FP_N.txt";
+        String outputPath = "data/output/MU.scoreNN";
         GeoPosition calc = null;
         GeoPosition real = null;
         ArrayList<String[]> resultEntries = new ArrayList<String[]>();
@@ -36,18 +35,17 @@ public class scoreNN {
             String[] realTmp = entry[0].split(":")[1].replace("(","").split(",");
             calc = new GeoPosition(Double.parseDouble(calcTmp[0]),Double.parseDouble(calcTmp[1]));
             real = new GeoPosition(Double.parseDouble(realTmp[0]),Double.parseDouble(realTmp[1]));
-            //double dist = Math.round(calc.distance(real)*1000) / 1000;
             double dist = Math.round(calc.distance(real) * 10.0) / 10.0;
             resultErrors.add(dist);
         }
-        resultErrors.sort(null);
+        Collections.sort(resultErrors, Collections.reverseOrder());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
             double errorMargin = 100.0;
             String errorOutputString = String.format(Locale.GERMAN,"%,.2f",errorMargin);
             writer.write(resultErrors.get(0) + " " + errorOutputString + "%\n");
             for(int i = 0; i < resultErrors.size(); i++) {
-                if(i >= 1 && resultErrors.get(i) > resultErrors.get(i-1)){
+                if(i >= 1 && resultErrors.get(i) < resultErrors.get(i-1)){
                     errorMargin = (resultErrors.size() - i) / Double.valueOf(resultErrors.size()) *100;
                     errorOutputString = String.format(Locale.GERMAN,"%,.2f",errorMargin);
                     writer.write(resultErrors.get(i) + " " + errorOutputString + "%\n");
