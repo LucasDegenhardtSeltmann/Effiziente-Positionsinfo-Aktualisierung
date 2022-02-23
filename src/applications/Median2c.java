@@ -9,8 +9,8 @@ import org.pi4.locutil.GeoPosition;
 
 public class Median2c {
     public static void main(String[] args){
-        String inputPath = "data/output/empirical_FP_KNN_2c.txt";
-        String outputPath = "data/output/2c_median.txt";
+        String inputPath = "data/output/model_FP_KNN_2c.txt";
+        String outputPath = "data/output/2c_median_model.txt";
         GeoPosition calc = null;
         GeoPosition real = null;
         ArrayList<String[]> resultEntries = new ArrayList<>();
