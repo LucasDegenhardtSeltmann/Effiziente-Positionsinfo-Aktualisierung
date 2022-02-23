@@ -9,13 +9,13 @@ import java.util.Scanner;
 import org.pi4.locutil.GeoPosition;
 
 public class scoreNN {
-    public static void main(String args[]){
-        String inputPath = "data/output/model_FP_N.txt";
-        String outputPath = "data/output/MU.scoreNN";
+    public static void main(String[] args){
+        String inputPath = "data/output/empirical_FP_NN.txt";
+        String outputPath = "data/output/MU.empirical_FP_NN_scoreNN.txt";
         GeoPosition calc = null;
         GeoPosition real = null;
-        ArrayList<String[]> resultEntries = new ArrayList<String[]>();
-        ArrayList<Double> resultErrors = new ArrayList<Double>();
+        ArrayList<String[]> resultEntries = new ArrayList<>();
+        ArrayList<Double> resultErrors = new ArrayList<>();
 
         File resultFile = new File(inputPath);
 		Scanner resultParser;
@@ -28,7 +28,6 @@ public class scoreNN {
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
-		System.out.println("Result File: " + resultFile.getAbsoluteFile());
 
         for(String[] entry: resultEntries) {
             String[] calcTmp = entry[1].split(":")[1].replace("(","").split(",");
